@@ -1,6 +1,6 @@
 # The Secret of Cell City
 
-A walkable 3D educational game based on the supplied 12-scene story. Follow Dr. Maya and four consistent student characters through a living miniature city, meet nine organelles in story order, solve their challenges, handle a city emergency, and reveal a labelled cell model.
+A guided 3D educational game based on the supplied 12-scene story. Watch Dr. Maya and four consistent student characters travel through a living miniature city, meet nine organelles in story order, solve their challenges, handle a city emergency, and reveal a labelled cell model.
 
 ## Run
 
@@ -12,26 +12,16 @@ A walkable 3D educational game based on the supplied 12-scene story. Follow Dr. 
 
 MAMP or any static server can serve `dist`. Open through HTTP, not by double-clicking the HTML file.
 
-## Controls
+## Play
 
-| Control | Action |
-| --- | --- |
-| WASD / arrow keys | Walk with the class, relative to the camera |
-| Shift | Jog |
-| Drag the scene | Look around |
-| Mouse wheel / + / − | Adjust camera distance |
-| E | Talk at a nearby unlocked stop; advance conversation |
-| M / City map | Toggle aerial map |
-| Follow teacher | Resume the guided walk to the current destination |
-| Touch arrows | Walk on phones and tablets |
-| Journal | Review discoveries; pause movement; reset progress |
+Select **Start field trip**. Class travels automatically; camera follows its movement. Dialogue advances on its own. Answer each challenge to continue. **Pause trip** and **Resume trip** share one control, preserving current scene and dialogue timing. City map and journal remain available. Drag the scene to look around or use camera zoom controls; guided camera recenters behind the class.
 
-Guided travel follows navigable routes and stops for conversations. Movement keys interrupt guidance. The membrane checkpoint must be completed before entering; after that, students may walk around the city freely, with learning chapters unlocked in order. Building collision and the outer boundary keep the group within the playable environment.
+Guided travel follows navigable routes and stops for conversations. Cell membrane checkpoint must be completed before class enters. Building collision and outer boundary keep class within playable environment.
 
 ## World and story
 
 - Female teacher and four diverse students, with consistent clothes, backpacks, walking limbs, speaking gestures, and formation at stops.
-- Street-level camera, optional aerial map, minimap and nearby interaction prompts.
+- Street-level tracking camera, optional aerial map and minimap.
 - Opening gate, photosynthesis garden, moving Golgi parcels, ER delivery carts, amino-acid assembly line, power-station steam and lights, flowing reservoir and recycling machinery.
 - Walk-in nucleus with a cutaway roof and department status screens.
 - Teacher, students and organelles speak in turn; optional browser speech narration.
@@ -46,4 +36,4 @@ The city combines plant and animal examples; its final model is an educational c
 
 ## Verification
 
-Navigation tests cover the closed gate, opening the checkpoint, building collision, wall sliding, routes around obstacles and the city boundary. Browser checks cover all nine guided routes, dialogue, keyboard takeover, every mini-game, emergency rescue, final matching, persistence, journal, mobile layout and touch controls.
+Navigation tests cover closed gate, opening checkpoint, building collision, wall sliding, routes around obstacles and city boundary. Browser checks cover guided travel, automatic dialogue, pause/resume timing, challenge progression, persistence, journal and mobile layout.
