@@ -227,12 +227,18 @@ function stopSpeech() {
   voice.stop();
   if (speechAvailable) speechSynthesis.cancel();
 }
-function speak(text, onDone, speaker = currentSpeaker) {
+function speak(text, onDone, speaker = currentSpeaker, onBlocked) {
   stopSpeech();
   const token = speechToken;
   if (!sound) return false;
   const done = () => token === speechToken && onDone?.();
-  if (voice.play(speaker, text, done, isHeld())) return true;
+  const refused = () => {
+    if (token !== speechToken) return;
+    // The phone refused to play without a tap: show the unmute button and keep normal reading time.
+    document.body.classList.add("muted");
+    onBlocked?.();
+  };
+  if (voice.play(speaker, text, done, isHeld(), refused)) return true;
   if (!speechAvailable) return false;
   const u = new SpeechSynthesisUtterance(text),
     browserVoice = bestBrowserVoice();
@@ -277,11 +283,18 @@ function showStoryLine() {
   setSpeaker(key);
   $("#dialogue-text").textContent = `“${text}”`;
   $("#story-dots").innerHTML = storyLines.map((_, i) => `<i class="${i <= storyIndex ? "read" : ""}"></i>`).join("");
-  const index = storyIndex;
+  const index = storyIndex,
+    shownAt = performance.now(),
+    // Even short lines stay up long enough to read, however quickly they are spoken.
+    minimum = Math.max(2200, text.length * 45 + 800),
+    stillHere = () => challenge === "story" && storyIndex === index;
   voice.preload(storyLines.slice(index + 1, index + 3));
-  const spoken = speak(text, () => {
-    if (challenge === "story" && storyIndex === index) scheduleAuto(advanceStory, 650);
-  });
+  const spoken = speak(
+    text,
+    () => stillHere() && scheduleAuto(advanceStory, Math.max(700, minimum - (performance.now() - shownAt))),
+    key,
+    () => stillHere() && scheduleAuto(advanceStory, Math.max(700, readingDelay(text) - (performance.now() - shownAt))),
+  );
   scheduleAuto(advanceStory, spoken ? speechFallbackDelay(text) : readingDelay(text));
 }
 function advanceStory() {
@@ -715,6 +728,7 @@ function setSound(on, { speakNow = true } = {}) {
   $("#sound").classList.toggle("enabled", sound);
   $("#sound").setAttribute("aria-label", sound ? "Turn sound off" : "Turn sound on");
   document.body.classList.toggle("muted", !sound);
+  if (sound) voice.unlock();
   if (!sound) {
     stopSpeech();
     ambience.stop();
@@ -739,6 +753,10 @@ function askForSound() {
     setSound(false);
   };
 }
+// Any tap or key press unlocks audio on phones, so later lines can play by themselves.
+const unlockAudio = () => sound && voice.unlock();
+document.addEventListener("pointerdown", unlockAudio, true);
+document.addEventListener("keydown", unlockAudio, true);
 $("#sound").onclick = () => setSound(!sound);
 $("#unmute").onclick = () => setSound(true);
 let soundChoice = null;
