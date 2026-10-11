@@ -4,7 +4,7 @@ import "@fontsource/fraunces/600.css";
 import "@fontsource/fraunces/700.css";
 import "@fontsource/fraunces/600-italic.css";
 import "./style.css";
-import { cast, prologue, conversations, travelLines, finale, teacherLines } from "./story.js";
+import { cast, prologue, conversations, travelLines, finale, teacherLines, welcomeBack, welcomeBackFinished } from "./story.js";
 import { createCity } from "./scene.js";
 import { stops, emergencies } from "./data.js";
 import { buildRounds, readingDelay, speechFallbackDelay, loadState, formatDuration } from "./game.js";
@@ -114,7 +114,7 @@ $("#app").innerHTML = `<header class="game-header">
       <div class="speaker-portrait" id="portrait">M</div>
       <div class="dialogue-copy" id="dialogue-copy">
         <div class="speaker" id="speaker">Dr. Maya <span>Your science guide</span></div>
-        <p id="dialogue-text">“Today, we’re going somewhere you’ve never been before. Come along — the class is waiting!”</p>
+        <p id="dialogue-text">“${teacherLines.opening}”</p>
         <div class="story-dots" id="story-dots"></div>
       </div>
       <div class="story-controls">
@@ -725,11 +725,8 @@ $("#reset-view").onclick = followClass;
 $("#back-to-class").onclick = followClass;
 $("#restart").onclick = resetPrompt;
 // Returning players see where they stopped, so a resumed trip is never a surprise.
-if (state.done && !state.finished)
-  $("#dialogue-text").textContent =
-    `“Welcome back! Last time we reached ${stops[Math.min(state.done, 8)].place.toLowerCase()}. Continue from there, or start from the beginning.”`;
-else if (state.finished)
-  $("#dialogue-text").textContent = "“Welcome back, explorers! You finished the trip last time. Review it, or start from the beginning.”";
+if (state.done && !state.finished) $("#dialogue-text").textContent = `“${welcomeBack(stops[Math.min(state.done, 8)].place)}”`;
+else if (state.finished) $("#dialogue-text").textContent = `“${welcomeBackFinished}”`;
 $("#face-north").onclick = () => city.faceNorth();
 $("#tilt").onclick = () => {
   const view = city.toggleTilt();

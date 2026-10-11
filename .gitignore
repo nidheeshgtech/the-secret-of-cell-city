@@ -4,3 +4,4 @@ dist/
 .DS_Store
 .venv/
 lines.json
+.env.local

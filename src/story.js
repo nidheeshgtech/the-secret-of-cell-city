@@ -113,6 +113,7 @@ export const finale = [
 ];
 // One-off lines Dr. Maya says outside the conversations.
 export const teacherLines = {
+  opening: "Today, we’re going somewhere you’ve never been before. Come along — the class is waiting!",
   discovery: "Excellent discovery! Follow me to our next stop.",
   alarm: "Every department is working together. Wait… an alarm! Cell City needs your help!",
   emergency: "System failure! Use what you discovered to send help to the right department.",
@@ -120,3 +121,8 @@ export const teacherLines = {
     "You were inside a cell all along! Every part has a special role, and together they keep the cell alive. Welcome to the microscopic world!",
   farewell: "Wonderful work, explorers. The smallest things can hold the biggest secrets. Keep asking questions!",
 };
+
+// Greetings for returning players (every stop has its own recorded version).
+export const welcomeBack = (place) =>
+  `Welcome back! Last time we reached ${place.toLowerCase()}. Continue from there, or start from the beginning.`;
+export const welcomeBackFinished = "Welcome back, explorers! You finished the trip last time. Review it, or start from the beginning.";
