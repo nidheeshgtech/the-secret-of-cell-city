@@ -517,6 +517,35 @@ main {
   opacity: 1;
   transform: translate(-50%, 0) rotate(-1.5deg);
 }
+/* Visible while sound is off, so nobody misses the voices. */
+.unmute {
+  display: none;
+  position: absolute;
+  z-index: 3;
+  right: 18px;
+  top: -18px;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--amber);
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: 2px 2px 0 var(--ink);
+}
+.unmute:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+.muted .unmute {
+  display: inline-flex;
+}
+.modal-note {
+  font-size: 13px !important;
+  margin-top: 14px;
+}
 /* Free exploring: drag the city like a map, then hop back to the class. */
 .back-to-class,
 .explore-hint {

@@ -111,6 +111,7 @@ $("#app").innerHTML = `<header class="game-header">
     <div class="world-tools"><button id="zoom-in" aria-label="Move camera closer">+</button><button id="zoom-out" aria-label="Move camera farther">−</button><button id="face-north" class="explore-only" aria-label="Turn to face north" title="Face north"><span class="needle">N</span></button><button id="tilt" class="explore-only" aria-label="Switch to flat 2D view" title="2D / 3D view">2D</button><button id="reset-view" aria-label="Return to follow camera">${icon("compass", 18)}</button></div>
     <div id="challenge" class="challenge" hidden></div>
     <div class="dialogue">
+      <button class="unmute" id="unmute">${icon("sound", 16)} Unmute audio</button>
       <div class="speaker-portrait" id="portrait">M</div>
       <div class="dialogue-copy" id="dialogue-copy">
         <div class="speaker" id="speaker">Dr. Maya <span>Your science guide</span></div>
@@ -700,17 +701,55 @@ $(".brand").onclick = (e) => {
   e.preventDefault();
   followClass();
 };
-$("#sound").onclick = () => {
-  sound = !sound;
+// Sound. Browsers only allow audio after the visitor clicks, so the first visit asks once;
+// the answer is remembered, and while sound is off an "Unmute audio" button stays in view.
+const SOUND_KEY = "cell-city-sound";
+function rememberSound(on) {
+  try {
+    localStorage.setItem(SOUND_KEY, on ? "on" : "off");
+  } catch {}
+}
+function setSound(on, { speakNow = true } = {}) {
+  sound = on;
+  rememberSound(on);
   $("#sound").classList.toggle("enabled", sound);
-  $("#sound").setAttribute("aria-label", sound ? "Turn narration off" : "Turn narration on");
+  $("#sound").setAttribute("aria-label", sound ? "Turn sound off" : "Turn sound on");
+  document.body.classList.toggle("muted", !sound);
   if (!sound) {
     stopSpeech();
     ambience.stop();
-  } else if (started && !isHeld()) ambience.play();
-  if (sound && challenge === "story") showStoryLine();
-  else if (sound) speak($("#dialogue-text").textContent.replace(/[“”]/g, ""));
-};
+    return;
+  }
+  if (started && !isHeld()) ambience.play();
+  if (!speakNow) return;
+  if (challenge === "story") showStoryLine();
+  else speak($("#dialogue-text").textContent.replace(/[“”]/g, ""));
+}
+function askForSound() {
+  openModal(
+    `<span class="tag">Before we set off</span><h2 id="modal-title">Turn on sound?</h2><p>Dr. Maya, the class and the organelles talk out loud, and the city hums with birdsong and breeze. The trip is best with sound on.</p><div class="two-actions"><button class="choice" id="sound-skip">Continue without sound</button><button class="primary" id="sound-on">${icon("sound", 18)} Play with sound</button></div><p class="modal-note">You can change this any time with the speaker button.</p>`,
+  );
+  $("#sound-on").focus();
+  $("#sound-on").onclick = () => {
+    closeModal();
+    setSound(true);
+  };
+  $("#sound-skip").onclick = () => {
+    closeModal();
+    setSound(false);
+  };
+}
+$("#sound").onclick = () => setSound(!sound);
+$("#unmute").onclick = () => setSound(true);
+let soundChoice = null;
+try {
+  soundChoice = localStorage.getItem(SOUND_KEY);
+} catch {}
+if (soundChoice === "on") setSound(true, { speakNow: false });
+else {
+  document.body.classList.add("muted");
+  if (soundChoice !== "off") askForSound();
+}
 $("#fullscreen").onclick = async () => {
   try {
     if (document.fullscreenElement) await document.exitFullscreen();
