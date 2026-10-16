@@ -24,6 +24,7 @@ Guided travel follows navigable routes and stops for conversations. Cell membran
 
 - Female teacher and four diverse students, with consistent clothes, backpacks, walking limbs, speaking gestures, and formation at stops.
 - Smoothed walking routes and a trailing camera; stops are framed to show the class and the building. Free map-style exploring and a minimap.
+- Outside the membrane, a quiet extracellular sea shows neighbouring cells and drifting vesicles while leaving the city itself unchanged.
 - Opening gate, photosynthesis garden, moving Golgi parcels, ER delivery carts, amino-acid assembly line, power-station steam and lights, flowing reservoir and recycling machinery.
 - Walk-in nucleus with a cutaway roof and department status screens.
 - Teacher, students and organelles speak in turn with their own recorded natural voices (turn on with the speaker button). A soft generated soundscape — breeze and distant birds — and gentle chimes for answers play while narration is on.

@@ -886,24 +886,124 @@ export function buildNature(kit, { scenery, cityLayer, locations, roads, obstacl
   );
   cityLayer.add(wall, rims);
 
-  // ---------- Lab bench: pale wood, calm and out of focus ----------
-  const bench = new T.PlaneGeometry(280, 280, 64, 64).rotateX(-Math.PI / 2).translate(0, -1.2, 0);
-  bench.deleteAttribute("uv");
-  paint(bench, (p, n, c) => {
-    const plank = Math.floor((p.z + 140) / 9),
-      tint = hash3(plank, 3, 9);
-    c.copy(col("#E7D8BE")).lerp(col("#D9C3A0"), tint * 0.55);
-    c.multiplyScalar(0.96 + Math.sin(p.x * 0.09 + noise3(p.x * 0.03, plank, 1) * 6) * 0.025);
-    const e = Math.sqrt((p.x / 35.5) ** 2 + (p.z / (35.5 * DISH_Z)) ** 2);
-    c.multiplyScalar(1 - (1 - smooth(1, 1.35, e)) * 0.16 * smooth(0.9, 1, e));
+  // ---------- Outside the city: the fluid and nearby cells of a tiny tissue ----------
+  // This lies below the dish, so it adds context in map view without changing the walkable city.
+  const fluid = new T.PlaneGeometry(280, 280, 64, 64).rotateX(-Math.PI / 2).translate(0, -1.2, 0);
+  fluid.deleteAttribute("uv");
+  const nearFluid = col("#ABD7D0"),
+    farFluid = col("#5E9EAE");
+  paint(fluid, (p, n, c) => {
+    const e = Math.sqrt((p.x / 35.5) ** 2 + (p.z / (35.5 * DISH_Z)) ** 2),
+      flow = fbm(p.x * 0.055, p.z * 0.055, 14),
+      ripple = Math.sin(p.x * 0.22 + flow * 8) * Math.sin(p.z * 0.19 - flow * 5);
+    c.copy(nearFluid).lerp(farFluid, smooth(0.75, 1.9, e) * 0.8);
+    c.multiplyScalar(0.94 + flow * 0.12 + ripple * 0.025);
+    c.multiplyScalar(1 - (1 - smooth(1, 1.35, e)) * 0.13);
   });
-  const benchMesh = new T.Mesh(bench, new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.82 }));
-  benchMesh.receiveShadow = true;
-  scenery.add(benchMesh);
+  const fluidMesh = new T.Mesh(fluid, new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.72 }));
+  fluidMesh.receiveShadow = true;
+  scenery.add(fluidMesh);
+
+  // Flattened cell silhouettes suggest the rest of the tissue. Their rings and nuclei make
+  // them legible from the aerial map, while muted colours keep Cell City as the focal point.
+  const neighbours = new T.Group();
+  neighbours.name = "extracellular-space";
+  scenery.add(neighbours);
+  const cells = [];
+  for (const [count, radius, offset] of [[8, 48, 0.12], [11, 69, 0.38]]) {
+    for (let i = 0; i < count; i++) {
+      const a = ((i + offset) / count) * Math.PI * 2,
+        r = radius + R(-3, 3),
+        x = Math.sin(a) * r,
+        z = Math.cos(a) * r * DISH_Z;
+      if (Math.abs(x) < 9 && z > 33) continue; // keep the entrance bridge clear
+      cells.push({ x, z, rx: R(2.3, 3.7), rz: R(2.1, 3.2), a });
+    }
+  }
+  const cellGeo = new T.SphereGeometry(1, 10, 6),
+    bodyGeo = new T.SphereGeometry(1, 14, 8),
+    edgeGeo = new T.TorusGeometry(1, 0.055, 4, 20),
+    membrane = [],
+    bodies = [],
+    nuclei = [];
+  for (const [i, cell] of cells.entries()) {
+    const tint = col(["#6DAEAA", "#8199BA", "#AE8EB8", "#79B59A"][i % 4]);
+    bodies.push({ x: cell.x, y: -1.02, z: cell.z, sx: cell.rx, sy: 0.19, sz: cell.rz, color: tint });
+    membrane.push({ x: cell.x, y: -0.99, z: cell.z, rx: Math.PI / 2, sx: cell.rx, sz: cell.rz, color: col("#4C8F9D") });
+    nuclei.push({ x: cell.x + Math.cos(cell.a) * cell.rx * 0.22, y: -0.81, z: cell.z + Math.sin(cell.a) * cell.rz * 0.2,
+      sx: cell.rx * 0.26, sy: 0.09, sz: cell.rz * 0.3, color: col("#727DA8") });
+  }
+  const cellMat = new T.MeshStandardMaterial({ color: "#FFFFFF", transparent: true, opacity: 0.82, roughness: 0.45, depthWrite: false });
+  instanced(bodyGeo, cellMat, bodies, { cast: false, receive: false, parent: neighbours });
+  instanced(edgeGeo, new T.MeshStandardMaterial({ color: "#FFFFFF", transparent: true, opacity: 0.62, depthWrite: false }), membrane,
+    { cast: false, receive: false, parent: neighbours });
+  instanced(cellGeo, new T.MeshStandardMaterial({ color: "#FFFFFF", transparent: true, opacity: 0.72, depthWrite: false }), nuclei,
+    { cast: false, receive: false, parent: neighbours });
+
+  // Close-up reward: tiny coloured structures inside each neighbouring cell.
+  const innerBodies = [];
+  for (const [i, cell] of cells.entries()) {
+    for (let j = 0; j < 4; j++) {
+      const a = i * 1.3 + j * 2.4,
+        d = R(0.42, 0.67);
+      innerBodies.push({
+        x: cell.x + Math.cos(a) * cell.rx * d,
+        y: -0.75,
+        z: cell.z + Math.sin(a) * cell.rz * d,
+        s: R(0.13, 0.25),
+        color: col(j % 2 ? "#E5BA79" : "#7C9FC5"),
+      });
+    }
+  }
+  const smallSphere = new T.SphereGeometry(1, 5, 3);
+  instanced(smallSphere, new T.MeshStandardMaterial({ color: "#FFFFFF", roughness: 0.45 }), innerBodies,
+    { cast: false, receive: false, parent: neighbours });
+
+  // Short protein chains and their bonds float in the extracellular fluid.
+  const proteins = [],
+    bonds = [];
+  for (let i = 0; i < 9; i++) {
+    const a = ((i + 0.47) / 9) * Math.PI * 2,
+      r = R(52, 77),
+      cx = Math.sin(a) * r,
+      cz = Math.cos(a) * r * DISH_Z;
+    let previous;
+    for (let j = 0; j < 4; j++) {
+      const p = {
+        x: cx + Math.cos(a) * (j - 1.5) * 0.56 + Math.sin(j * 2.2 + i) * 0.12,
+        y: -0.65 + Math.sin(j * 1.7 + i) * 0.08,
+        z: cz - Math.sin(a) * (j - 1.5) * 0.56 + Math.cos(j * 2.2 + i) * 0.12,
+      };
+      proteins.push({ ...p, s: j % 2 ? 0.3 : 0.25, color: col(j % 2 ? "#E4B26F" : "#D789A9") });
+      if (previous) bonds.push(previous.x, previous.y, previous.z, p.x, p.y, p.z);
+      previous = p;
+    }
+  }
+  instanced(smallSphere, new T.MeshStandardMaterial({ color: "#FFFFFF", roughness: 0.35 }), proteins,
+    { cast: false, receive: false, parent: neighbours });
+  const bondGeometry = new T.BufferGeometry();
+  bondGeometry.setAttribute("position", new T.Float32BufferAttribute(bonds, 3));
+  neighbours.add(new T.LineSegments(bondGeometry,
+    new T.LineBasicMaterial({ color: "#8C7895", transparent: true, opacity: 0.72 })));
+
+  // Sparse free-floating vesicles provide a second scale without filling the empty space with clutter.
+  const vesicles = [];
+  for (let i = 0; i < 45; i++) {
+    const a = rnd() * Math.PI * 2,
+      r = R(40, 95),
+      x = Math.sin(a) * r,
+      z = Math.cos(a) * r * DISH_Z;
+    if (Math.abs(x) < 6 && z > 31) continue;
+    vesicles.push({ x, y: R(-0.86, -0.63), z, s: R(0.09, 0.23), color: col(i % 4 ? "#EDF8EA" : "#E7D4B7") });
+  }
+  const driftingVesicles = instanced(new T.SphereGeometry(1, 6, 4),
+    new T.MeshStandardMaterial({ color: "#FFFFFF", transparent: true, opacity: 0.85, roughness: 0.28, depthWrite: false }),
+    vesicles, { cast: false, receive: false, parent: neighbours });
 
   return {
     update(t) {
       if (!reduced) wind.value = t;
+      if (!reduced && driftingVesicles) driftingVesicles.rotation.y = Math.sin(t * 0.12) * 0.08;
     },
   };
 }

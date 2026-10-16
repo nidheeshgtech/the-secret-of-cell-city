@@ -424,6 +424,7 @@ export function createCity(host, labels, stops, events = {}) {
   const pointers = new Map(),
     ndc = new T.Vector2(),
     groundPlane = new T.Plane(new T.Vector3(0, 1, 0), -0.4),
+    exteriorPlane = new T.Plane(new T.Vector3(0, 1, 0), 1.2),
     groundHit = new T.Vector3(),
     grab = new T.Vector3(),
     pivot = new T.Vector3();
@@ -454,7 +455,10 @@ export function createCity(host, labels, stops, events = {}) {
     ndc.set(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
     raycaster.setFromCamera(ndc, camera);
     raycaster.far = Infinity;
-    const hit = raycaster.ray.intersectPlane(groundPlane, out);
+    let hit = raycaster.ray.intersectPlane(groundPlane, out);
+    // Outside the membrane the fluid is lower than the city floor. Aim at its real surface
+    // so zooming toward a neighbouring cell keeps that cell under the cursor.
+    if (hit && (out.x / 35.3) ** 2 + (out.z / 30.4) ** 2 > 1) hit = raycaster.ray.intersectPlane(exteriorPlane, out);
     // Ignore hits near the horizon: they jump wildly with tiny mouse moves.
     return hit && hit.distanceTo(camera.position) < Math.max(60, explore.dist * 6) ? hit : null;
   }
@@ -497,7 +501,9 @@ export function createCity(host, labels, stops, events = {}) {
   function zoomAt(factor, clientX, clientY) {
     const before = explore.distGoal;
     explore.distGoal = T.MathUtils.clamp(explore.distGoal * factor, 2.5, 90);
-    if (clientX === undefined || !groundAt(clientX, clientY, groundHit)) return;
+    // Zoom in toward the selected detail. Zooming out keeps the current focus instead of
+    // flinging the camera away from the cursor and into the map boundary.
+    if (clientX === undefined || explore.distGoal >= before || !groundAt(clientX, clientY, groundHit)) return;
     explore.goal.lerp(groundHit.setY(0.4), 1 - explore.distGoal / before);
   }
   window.addEventListener("blur", clearDrag);
@@ -582,7 +588,7 @@ export function createCity(host, labels, stops, events = {}) {
       if (mode === "reveal") return;
       enterExplore();
       // Trackpad pinch arrives as ctrl+wheel with small deltas.
-      zoomAt(Math.exp(e.deltaY * (e.ctrlKey ? 0.01 : 0.0012)), e.clientX, e.clientY);
+      zoomAt(T.MathUtils.clamp(Math.exp(e.deltaY * (e.ctrlKey ? 0.01 : 0.0012)), 0.74, 1.35), e.clientX, e.clientY);
     },
     { passive: false },
   );
@@ -832,8 +838,8 @@ export function createCity(host, labels, stops, events = {}) {
         moveGoal(panVelocity.x * dt, panVelocity.y * dt);
         panVelocity.multiplyScalar(Math.exp(-dt * 4.5));
       }
-      // Keep the view over the dish.
-      const reach = Math.hypot(explore.goal.x / 38, explore.goal.z / 33);
+      // Keep the view within the detailed tissue, including the cells outside the membrane.
+      const reach = Math.hypot(explore.goal.x / 96, explore.goal.z / 84);
       if (reach > 1) explore.goal.set(explore.goal.x / reach, 0.4, explore.goal.z / reach);
       const ease = 1 - Math.exp(-dt * 10);
       explore.target.lerp(explore.goal, ease);
