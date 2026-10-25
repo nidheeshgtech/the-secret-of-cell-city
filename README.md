@@ -1,5 +1,7 @@
 # The Secret of Cell City
 
+© 2026 Nila Santhosh. All rights reserved for the original game code, story, characters, and visual design in this project. Third-party software, fonts, and other credited materials remain subject to their respective licenses.
+
 A guided 3D educational game based on the supplied 12-scene story. Watch Dr. Maya and four consistent student characters travel through a living miniature city, meet nine organelles in story order, solve their challenges, handle a city emergency, and reveal a labelled cell model.
 
 ## Run

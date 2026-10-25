@@ -35,6 +35,7 @@ const paths = {
   compass: "m16 8-3 5-5 3 3-5 5-3ZM12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20",
   molecule:
     "M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM5 4a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm14 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4ZM6.6 7.4l3.3 2.8m4.2 3.6 3.3 2.8",
+  mail: "M3 5h18v14H3zM3 6l9 7 9-7",
 };
 export const icon = (name, size = 20) =>
   `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${paths[name] || paths.star}"/></svg>`;
@@ -104,6 +105,7 @@ $("#app").innerHTML = `<header class="game-header">
       <h1>Big secrets.<br><em>Tiny world.</em></h1>
       <p>Join Dr. Maya and four curious students. Walk the streets, meet the organelles and find out what keeps this city alive.</p>
       <div class="cast-line">${["teacher", "aria", "ben", "zoya", "leo"].map((k) => `<i style="--cast:${cast[k].color}" title="${cast[k].name}"></i>`).join("")}<span>One class. Nine stops.</span></div>
+      <small class="creator-credit">An original creation by <a href="https://www.linkedin.com/in/nila-santhosh-74658a15a/" target="_blank" rel="noopener noreferrer">Nila Santhosh</a> · © 2026 <a class="creator-mail" href="mailto:nilasanthosh03@gmail.com" aria-label="Email Nila Santhosh">${icon("mail", 16)}</a></small>
     </div>
     <div class="chapter-banner" id="chapter-banner"></div>
     <button class="back-to-class" id="back-to-class">${icon("compass", 18)} Back to the class</button>
@@ -131,6 +133,16 @@ $("#app").innerHTML = `<header class="game-header">
     </div>
   </section>
 </main>
+<div class="creator-dock">
+  <a class="creator-avatar" href="https://www.linkedin.com/in/nila-santhosh-74658a15a/" target="_blank" rel="noopener noreferrer" aria-label="Visit Nila Santhosh on LinkedIn (opens in a new tab)" title="Nila Santhosh on LinkedIn">
+    <span class="creator-avatar-face" aria-hidden="true">NS</span>
+    <span class="creator-avatar-copy" aria-hidden="true">Creator<br><b>Nila Santhosh</b></span>
+    <span class="creator-avatar-linkedin" aria-hidden="true">in</span>
+  </a>
+  <a class="creator-email" href="mailto:nilasanthosh03@gmail.com" aria-label="Email Nila Santhosh" title="Email Nila Santhosh">
+    ${icon("mail", 18)}
+  </a>
+</div>
 <div class="pause-screen" id="pause-screen" hidden><div>${icon("pause", 28)}<h2>Field trip paused</h2><p>Press <b>Resume</b> in the top bar when you’re ready.</p></div></div>
 <div id="modal" class="modal" hidden></div><div id="toast" role="status" aria-live="polite"></div>`;
 
